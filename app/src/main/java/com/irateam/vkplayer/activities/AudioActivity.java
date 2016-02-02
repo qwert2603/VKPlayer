@@ -95,6 +95,17 @@ public class AudioActivity extends AppCompatActivity implements ServiceConnectio
         unbindService(this);
         unregisterReceiver(downloadFinishedReceiver);
     }
+    
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        // random/repeat state might be changed while ListActivity is not resumed.
+        if (playerService != null) {
+            playerController.setRepeatState(playerService.getRepeatState());
+            playerController.setRandomState(playerService.getRandomState());
+        }
+    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
