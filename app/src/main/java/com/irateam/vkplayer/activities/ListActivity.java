@@ -192,6 +192,18 @@ public class ListActivity extends AppCompatActivity implements
         unbindService(this);
         unregisterReceiver(downloadFinishedReceiver);
     }
+    
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        // broadcast/random/repeat state might be changed while ListActivity was not resumed.
+        if (playerService != null) {
+            playerController.setBroadcastState(playerService.getBroadcastState());
+            playerController.setRepeatState(playerService.getRepeatState());
+            playerController.setRandomState(playerService.getRandomState());
+        }
+    }
 
     @Override
     public boolean onCreateOptionsMenu(final Menu menu) {
