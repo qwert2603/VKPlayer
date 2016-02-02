@@ -35,7 +35,7 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         findViewById(R.id.button_vk_login).setOnClickListener((v) -> {
-            VKSdk.login(LoginActivity.this, VKScope.AUDIO);
+            VKSdk.login(LoginActivity.this, VKScope.AUDIO, VKScope.STATUS);
         });
         findViewById(R.id.button_github).setOnClickListener((v) -> {
             Uri uri = Uri.parse("https://github.com/IRA-Team/VKPlayer");

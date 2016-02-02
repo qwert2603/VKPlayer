@@ -24,6 +24,7 @@ import android.content.IntentFilter;
 import android.media.AudioManager;
 import android.os.Binder;
 import android.os.IBinder;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.irateam.vkplayer.models.Audio;
@@ -32,6 +33,8 @@ import com.irateam.vkplayer.models.Settings;
 import com.irateam.vkplayer.notifications.PlayerNotificationFactory;
 import com.irateam.vkplayer.player.Player;
 import com.irateam.vkplayer.receivers.DownloadFinishedReceiver;
+import com.vk.sdk.api.VKApi;
+import com.vk.sdk.api.VKParameters;
 
 import java.util.List;
 
@@ -54,6 +57,7 @@ public class PlayerService extends Service implements Player.PlayerEventListener
     private boolean wasPlaying = false;
     private boolean hasFocus = false;
     private DownloadFinishedReceiver downloadFinishedReceiver;
+    private boolean broadcastState;
 
     @Override
     public void onCreate() {
@@ -63,6 +67,7 @@ public class PlayerService extends Service implements Player.PlayerEventListener
         settings = Settings.getInstance(this);
         player.setRepeatState(settings.getPlayerRepeat());
         player.setRandomState(settings.getRandomState());
+        broadcastState = settings.getBroadcastState();
         notificationFactory = new PlayerNotificationFactory(this);
 
         audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
@@ -215,6 +220,36 @@ public class PlayerService extends Service implements Player.PlayerEventListener
         return player.getPlayingAudioIndex();
     }
 
+    /**
+     * Set audio to user's status.
+     * @param audio - song that will be set to user's status.
+     *              If audio == null, status will be deleted.
+     */
+    private void setAudioToBroadcast(@Nullable Audio audio) {
+        VKParameters parameters;
+        if (audio != null) {
+            parameters = VKParameters.from("audio", audio.getOwnerId() + "_" + audio.getId());
+        } else {
+            parameters = VKParameters.from();
+        }
+        VKApi.audio().setBroadcast(parameters).executeWithListener(null);
+    }
+
+    public boolean switchBroadcastState() {
+        broadcastState = !broadcastState;
+        settings.setBroadcastState(broadcastState);
+        if (broadcastState) {
+            setAudioToBroadcast(player.getPlayingAudio());
+        } else {
+            setAudioToBroadcast(null);
+        }
+        return broadcastState;
+    }
+
+    public boolean getBroadcastState() {
+        return broadcastState;
+    }
+
     public void setRepeatState(Player.RepeatState state) {
         settings.setPlayerRepeat(state);
         player.setRepeatState(state);
@@ -268,6 +303,9 @@ public class PlayerService extends Service implements Player.PlayerEventListener
                 startForeground(PlayerNotificationFactory.ID, notificationFactory.get(position, audio, event));
                 audio.getAudioInfo().init(this, audio);
                 audio.getAudioInfo().getWithListener(this);
+                if (broadcastState) {
+                    setAudioToBroadcast(audio);
+                }
                 break;
             case PAUSE:
                 if (removeNotification) {
@@ -275,12 +313,21 @@ public class PlayerService extends Service implements Player.PlayerEventListener
                 } else {
                     notificationFactory.update(position, audio, Player.PlayerEvent.PAUSE);
                 }
+                if (broadcastState) {
+                    setAudioToBroadcast(null);
+                }
                 break;
             case RESUME:
                 startForeground(PlayerNotificationFactory.ID, notificationFactory.get(position, audio, event));
+                if (broadcastState) {
+                    setAudioToBroadcast(audio);
+                }
                 break;
             case STOP:
                 stopForeground(true);
+                if (broadcastState) {
+                    setAudioToBroadcast(null);
+                }
                 break;
         }
     }

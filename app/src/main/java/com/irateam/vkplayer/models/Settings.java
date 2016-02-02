@@ -35,6 +35,7 @@ import java.util.Date;
 
 public class Settings {
 
+    public static final String BROADCAST_STATE = "broadcast_state";
     public static final String REPEAT_STATE = "repeat_state";
     public static final String RANDOM_STATE = "random_state";
 
@@ -59,6 +60,16 @@ public class Settings {
 
     private Settings(Context context) {
         preferences = PreferenceManager.getDefaultSharedPreferences(context);
+    }
+
+    public void setBroadcastState(boolean state) {
+        preferences.edit()
+                .putBoolean(BROADCAST_STATE, state)
+                .apply();
+    }
+
+    public boolean getBroadcastState() {
+        return preferences.getBoolean(BROADCAST_STATE, false);
     }
 
     public void setPlayerRepeat(Player.RepeatState state) {

@@ -20,7 +20,6 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -46,6 +45,7 @@ public class PlayerController implements Player.PlayerEventListener, Player.Play
     /*
     * Views
     */
+    public ImageView broadcast;
     public TextView songName;
     public TextView author;
 
@@ -81,7 +81,8 @@ public class PlayerController implements Player.PlayerEventListener, Player.Play
 
         rootView = view;
         fab = (FloatingActionButton) view.findViewById(R.id.fab);
-        
+
+        broadcast = (ImageView) view.findViewById(R.id.player_panel_header_broadcast);
         songName = (TextView) view.findViewById(R.id.player_panel_song_name);
         author = (TextView) view.findViewById(R.id.player_panel_author);
 
@@ -116,6 +117,10 @@ public class PlayerController implements Player.PlayerEventListener, Player.Play
         next.setOnClickListener((v) ->
                 playerService.next());
 
+        setBroadcastState(playerService.getBroadcastState());
+        broadcast.setOnClickListener((v) ->
+                setBroadcastState(playerService.switchBroadcastState()));
+
         setRepeatState(playerService.getRepeatState());
         repeat.setOnClickListener((v) ->
                 setRepeatState(playerService.switchRepeatState()));
@@ -146,6 +151,7 @@ public class PlayerController implements Player.PlayerEventListener, Player.Play
         });
     }
 
+    @SuppressWarnings("deprecation")
     public void setPlayPause(boolean play) {
         if (play)
             playPause.setImageDrawable(resources.getDrawable(R.drawable.ic_player_pause_grey_18dp));
@@ -159,6 +165,7 @@ public class PlayerController implements Player.PlayerEventListener, Player.Play
         if (audio != null) {
             rootView.setVisibility(View.VISIBLE);
             setAudio(playerService.getPlayingAudioIndex(), audio);
+            setBroadcastState(playerService.getBroadcastState());
             setRepeatState(playerService.getRepeatState());
             setRandomState(playerService.getRandomState());
         }
@@ -201,6 +208,15 @@ public class PlayerController implements Player.PlayerEventListener, Player.Play
             progress.setMax(audio.getDuration() * 1000);
             progress.setProgress(0);
             progress.setSecondaryProgress(0);
+        }
+    }
+
+    @SuppressWarnings("deprecation")
+    public void setBroadcastState(boolean broadcastState) {
+        if (broadcastState) {
+            broadcast.setImageDrawable(resources.getDrawable(R.drawable.ic_player_broadcast_on_light_grey_18dp));
+        } else {
+            broadcast.setImageDrawable(resources.getDrawable(R.drawable.ic_player_broadcast_light_grey_18dp));
         }
     }
 
